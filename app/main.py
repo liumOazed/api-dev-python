@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Response, status, HTTPException
-# from fastapi.params import Body
-# from typing import Optional
-# from random import randrange # will use it for id
+from fastapi.params import Body
+from typing import Optional
+from random import randrange # will use it for id
 import psycopg2
 from psycopg2.extras import RealDictCursor 
 import time
 from app.database import create_db_and_tables, SessionDep
-from . import models, schemas
+from . import models, schemas, utils    
 from sqlmodel import select
 
 
@@ -131,5 +131,22 @@ def delete_post(id:int, session: SessionDep):
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+def create_user(session: SessionDep, user: schemas.UserCreate):
+    # Before creating a new user, we need to create a hash for the password
+    hashed_password = utils.hash(user.password)
+    user.password = hashed_password # hashed the pass and stored it in user.pass
     
+    new_user = models.User(
+        **user.model_dump())
+    session.add(new_user)
+    session.commit()
+    session.refresh(new_user)
+    return new_user
+
+@app.get('/users/{id}', response_model=schemas.UserOut)
+def get_user(id:int, session: SessionDep):
+    user = session.get(models.User, id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"user with id: {id} was not found")
+    return user 
