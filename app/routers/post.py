@@ -5,7 +5,8 @@ from sqlmodel import select
 
 
 router = APIRouter(
-    prefix="/posts" 
+    prefix="/posts",
+    tags=["Posts"] 
 )
 
 

@@ -8,7 +8,7 @@ import time
 from app.database import create_db_and_tables, SessionDep
 from . import models, schemas, utils    
 from sqlmodel import select
-from .routers import post, user
+from .routers import post, user, auth
 
 app = FastAPI()
 
@@ -58,3 +58,4 @@ def root(): # keep it as descriptive as possible
 
 app.include_router(post.router)
 app.include_router(user.router)
+app.include_router(auth.router)
