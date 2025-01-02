@@ -1,6 +1,13 @@
 import jwt 
 from datetime import datetime, timedelta, timezone
+from . import schemas, models
+from sqlmodel import select
+from .database import  SessionDep
+from fastapi import Depends, status, HTTPException 
+from fastapi.security import OAuth2PasswordBearer
 
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login") ## login is the endpoint of our url login
 
 # We will need secret key which reside in our server
 # Provide algo[HS 256]
@@ -21,4 +28,31 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
     
+# Now create a function to verify the token
+# credentials_exception is saying what our exception should be if credentials doesn't match
+def verify_access_token(token: str, credentials_exception): 
     
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM) # decode jwt
+        id : str = str(payload.get("user_id")) # extract and cast id to string
+        
+        if id is None: 
+            raise credentials_exception # throw error if no id
+        token_data = schemas.TokenData(id=id) # Here we validate the token
+    
+    except jwt.PyJWTError:
+        raise credentials_exception
+    
+    return token_data # return the token data so we can make use of it
+    
+
+# This function will take the token from the request and verify the token, extract id
+def get_current_user(session: SessionDep,token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                          detail="Could not validate credentials", headers={"WWW-Authenticate": "Bearer"})
+    
+    # since token passing to the curent user we can pass it to verify_access_token
+    token = verify_access_token(token, credentials_exception)
+    user = session.exec(select(models.User).where(models.User.id == token.id)).first()
+    
+    return user

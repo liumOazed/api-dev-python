@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 
-@router.post("/login")
+@router.post("/login", response_model=schemas.Token)
 def login(session: SessionDep, user_credentials: OAuth2PasswordRequestForm = Depends()):
     
     user = session.exec(
@@ -19,7 +19,7 @@ def login(session: SessionDep, user_credentials: OAuth2PasswordRequestForm = Dep
     
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
         

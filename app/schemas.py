@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional
 
 # This pydantic model will represent what a post should look like
 
@@ -29,3 +30,12 @@ class UserOut(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    
+# Schema for token
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
+# Schema for token data that embedded in the token
+class TokenData(BaseModel):
+    id: Optional[str] = None
