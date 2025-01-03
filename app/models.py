@@ -1,6 +1,7 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from datetime import datetime, timezone
 import sqlalchemy as sa
+from typing import Optional
 
 # sqlmodel/sqlalchemy model what database tables would look like
 class Post(SQLModel, table=True):
@@ -12,6 +13,8 @@ class Post(SQLModel, table=True):
     published: bool = Field(default=True, nullable=False, sa_column_kwargs={"server_default": sa.text("TRUE")})
     created_at: datetime = Field(sa_column=sa.Column(sa.DateTime(timezone=True), 
                                                      nullable=False, server_default=sa.text("now()")))
+    owner_id: int = Field(foreign_key="users.id", ondelete="CASCADE", nullable=False)
+    owner: Optional["User"] = Relationship(back_populates="posts")
    
 
 class User(SQLModel, table=True): 
@@ -22,4 +25,6 @@ class User(SQLModel, table=True):
     password: str = Field(nullable=False)
     created_at: datetime = Field(sa_column=sa.Column(sa.DateTime(timezone=True),
                                                      nullable=False, server_default=sa.text("now()")))
+    posts: list[Post] = Relationship(back_populates="owner") 
+
     

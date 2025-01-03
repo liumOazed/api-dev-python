@@ -24,8 +24,8 @@ def create_posts(post:schemas.PostCreate, session: SessionDep, current_user: int
     #    post.title, post.content, post.published))
     # new_post = cursor.fetchone() # will return the new post (cursor.execute)
     # conn.commit() # push those changes
-    print(current_user.email)
-    new_post = models.Post(
+    # print(current_user.id)
+    new_post = models.Post(owner_id=current_user.id, 
         **post.model_dump())
     session.add(new_post)
     session.commit()
@@ -53,7 +53,7 @@ def get_post(id:int, session: SessionDep, current_user: int = Depends(oauth2.get
     post = session.get(models.Post, id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
-    return post 
+    return post
 
 # updating a post
 @router.put("/{id}", response_model=schemas.PostResponse)
@@ -65,6 +65,9 @@ def update_post(id:int, post:schemas.PostCreate, session: SessionDep, current_us
     updated_post = session.get(models.Post, id)
     if updated_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
+    
+    if updated_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized to perform requested action")
     
     update_data = post.model_dump(exclude_unset=True)  # Exclude fields not provided in the request
     for key, value in update_data.items():
@@ -82,6 +85,10 @@ def delete_post(id:int, session: SessionDep, current_user: int = Depends(oauth2.
     deleted_post = session.get(models.Post, id)
     if deleted_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
+    
+    if deleted_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized to perform requested action")
+    
     session.delete(deleted_post)
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

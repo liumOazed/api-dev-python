@@ -12,21 +12,24 @@ class PostBase(BaseModel):
 class PostCreate(PostBase):
     pass
 
-# Now this will handle us the direction of data sending to users
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+# Now this will handle us the direction of data sending to users. PostResponse is responsible for sending the posts out
 
 class PostResponse(PostBase):
-    # id: int
+    id: int
     created_at: datetime
+    owner_id: int
+    owner: UserOut
+    
     
 # User Schema 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     
-class UserOut(BaseModel):
-    id: int
-    email: EmailStr
-    
+        
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
