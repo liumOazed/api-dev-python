@@ -2,6 +2,7 @@ from .. import models, schemas, oauth2
 from fastapi import Depends, Response, status, HTTPException, APIRouter
 from ..database import  SessionDep
 from sqlmodel import select
+from typing import Optional
 
 
 router = APIRouter(
@@ -12,8 +13,11 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[schemas.PostResponse])
-def get_posts(session: SessionDep, current_user: int = Depends(oauth2.get_current_user)):
-    posts = session.exec(select(models.Post)).all()
+def get_posts(session: SessionDep, current_user: int = Depends(oauth2.get_current_user),
+              limit: int = 10, skip: int = 0, search: Optional[str] = ""):
+    print(search)
+    query = select(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip) # Apply the limit to the query plus skip
+    posts = session.exec(query).all() # Execute the query and fetch results
     # cursor.execute("""SELECT * FROM posts """)
     # posts = cursor.fetchall()
     return posts
