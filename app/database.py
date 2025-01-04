@@ -4,15 +4,10 @@ from psycopg2.extras import RealDictCursor
 import time
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Field, Session, SQLModel, create_engine, select
+from .config import settings
 
-# PostgreSQL connection details
-db_name = "fastapi"
-db_user = "postgres"
-db_password = "admin"
-db_host = "localhost"  # or the server IP
-db_port = "5432"
 
-postgres_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+postgres_url = f"postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}"
 
 engine = create_engine(postgres_url)
 
