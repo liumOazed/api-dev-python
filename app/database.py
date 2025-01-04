@@ -1,5 +1,7 @@
 from typing import Annotated
-
+import psycopg2
+from psycopg2.extras import RealDictCursor 
+import time
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
@@ -26,3 +28,17 @@ def get_session():
 # Use SessionDep in FastAPI route handlers to automatically get a session without manual setup.
 SessionDep = Annotated[Session, Depends(get_session)]
 
+
+# Not needed but only for demo purposes if u wanna run raw sql in posgres library
+
+# while True:
+#     try:
+#         conn = psycopg2.connect(host='localhost', database='fastapi', 
+#                                 user='postgres', password='admin', cursor_factory=RealDictCursor) #RealDictCursor will give u the column names
+#         cursor = conn.cursor() # cursor will be used to execute sql statements
+#         print("Database connection was successful")
+#         break
+#     except Exception as error:
+#         print("Connection to database failed")
+#         print("Error: ", error)
+#         time.sleep(2)
