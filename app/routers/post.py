@@ -1,7 +1,7 @@
 from .. import models, schemas, oauth2
 from fastapi import Depends, Response, status, HTTPException, APIRouter
 from ..database import  SessionDep
-from sqlmodel import select
+from sqlmodel import select, func
 from typing import Optional
 
 
@@ -12,15 +12,22 @@ router = APIRouter(
 
 
 
-@router.get("/", response_model=list[schemas.PostResponse])
+@router.get("/", response_model=list[schemas.PostOut])
 def get_posts(session: SessionDep, current_user: int = Depends(oauth2.get_current_user),
               limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     # print(search)
-    query = select(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip) # Apply the limit to the query plus skip
-    posts = session.exec(query).all() # Execute the query and fetch results
+    # query = select(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip) # Apply the limit to the query plus skip
+    # posts = session.exec(query).all() # Execute the query and fetch results
     # cursor.execute("""SELECT * FROM posts """)
     # posts = cursor.fetchall()
-    return posts
+    # Count votes and label it as "likes"
+    joined_query = select(models.Post, func.count(models.Vote.post_id).label("likes")).join(
+        models.Vote, models.Post.id == models.Vote.post_id, isouter=True
+    ).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip) # LEFT JOIN votes ON posts.id = votes.post_id
+    
+    # Execute the query
+    results = session.exec(joined_query).all()
+    return results
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_posts(post:schemas.PostCreate, session: SessionDep, current_user: int = Depends(oauth2.get_current_user)): # referencing that Post pydantic and saving it as new_post
@@ -38,11 +45,14 @@ def create_posts(post:schemas.PostCreate, session: SessionDep, current_user: int
 # title str, content str
 
 # retrieving latest post
-@router.get("/latest", response_model=schemas.PostResponse)
+@router.get("/latest", response_model=schemas.PostOut)
 def latest_post(session: SessionDep, current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute("""SELECT * FROM posts ORDER BY created_at DESC LIMIT 1 """)
     # posts = cursor.fetchone()
-    latest_post = session.exec(select(models.Post).order_by(models.Post.created_at.desc()).limit(1)).first()
+    joined_query = select(models.Post, func.count(models.Vote.post_id).label("likes")).join(
+        models.Vote, models.Post.id == models.Vote.post_id, isouter=True
+    ).group_by(models.Post.id).order_by(models.Post.created_at.desc()).limit(1)
+    latest_post = session.exec(joined_query).first()
     # Check if a post exists
     if not latest_post:
         return {"message": "No posts found."}
@@ -50,11 +60,15 @@ def latest_post(session: SessionDep, current_user: int = Depends(oauth2.get_curr
 
 # retrieving one individual post
 
-@router.get("/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostOut)
 def get_post(id:int, session: SessionDep, current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),))
     # post = cursor.fetchone()
-    post = session.get(models.Post, id)
+    # post = session.get(models.Post, id)
+    joined_query = select(models.Post, func.count(models.Vote.post_id).label("likes")).join(
+        models.Vote, models.Post.id == models.Vote.post_id, isouter=True
+    ).where(models.Post.id == id).group_by(models.Post.id)
+    post = session.exec(joined_query).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
     return post

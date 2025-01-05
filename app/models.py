@@ -27,4 +27,10 @@ class User(SQLModel, table=True):
                                                      nullable=False, server_default=sa.text("now()")))
     posts: list[Post] = Relationship(back_populates="owner") 
 
+
+class Vote(SQLModel, table=True):
+    __tablename__ = "votes"
+    
+    user_id: int = Field(foreign_key="users.id", ondelete="CASCADE", primary_key=True, nullable=False)
+    post_id: int = Field(foreign_key="posts.id", ondelete="CASCADE", primary_key=True, nullable=False)
     

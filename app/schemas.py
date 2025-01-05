@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 # This pydantic model will represent what a post should look like
 
@@ -22,6 +22,10 @@ class PostResponse(PostBase):
     created_at: datetime
     owner_id: int
     owner: UserOut
+
+class PostOut(BaseModel):
+    Post: PostResponse
+    likes: int
     
     
 # User Schema 
@@ -42,3 +46,9 @@ class Token(BaseModel):
 # Schema for token data that embedded in the token
 class TokenData(BaseModel):
     id: Optional[str] = None
+    
+    
+# Schema for vote
+class Vote(BaseModel):
+    post_id: int
+    dir: Literal[0,1]
