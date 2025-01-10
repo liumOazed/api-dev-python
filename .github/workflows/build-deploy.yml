@@ -8,5 +8,11 @@ jobs:
     steps:
       - name: pulling git repo
         uses: actions/checkout@v4
-      - name: say hi to zed
-        run: echo "hi zed"
+      - name: installing python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
