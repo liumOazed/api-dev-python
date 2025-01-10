@@ -7,6 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: pulling git repo
-        usages: actions/checkout@v4
+        uses: actions/checkout@v4
       - name: say hi to zed
         run: echo "hi zed"
