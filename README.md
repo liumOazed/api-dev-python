@@ -1,4 +1,4 @@
-# Backend for a Social Media Application Powered by FastAPI
+# Backend of a Social Media Application Powered by FastAPI
 
 This is a social-media app where you can create a user, create post, read post, update post and delete post. Also you can like each-others posts.
 
